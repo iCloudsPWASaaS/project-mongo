@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import connectDb from "@/lib/db";
+import { ensureDemoUser } from "@/lib/demo-user";
 import User from "@/models/User";
 import { createSession } from "@/lib/session";
 
@@ -16,6 +17,10 @@ export async function POST(req: Request) {
     }
 
     await connectDb();
+    // The demo account may not exist yet on a freshly provisioned app — this is
+    // the first request that touches the database, so this is where its
+    // collection and the account itself get created.
+    await ensureDemoUser();
 
     const user = await User.findOne({ email: String(email).toLowerCase() }).select("+password");
     if (!user) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import connectDb from "@/lib/db";
+import { ensureDemoUser } from "@/lib/demo-user";
 import User from "@/models/User";
 import { createSession } from "@/lib/session";
 
@@ -17,6 +18,10 @@ export async function POST(req: Request) {
     }
 
     await connectDb();
+    // Ensures the demo account exists before we test for duplicates, so signing
+    // up with the demo email reports "already exists" rather than racing the
+    // seeder into a duplicate-key error.
+    await ensureDemoUser();
 
     const exists = await User.findOne({ email: String(email).toLowerCase() });
     if (exists) {
